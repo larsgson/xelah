@@ -9,6 +9,9 @@ node_modules
 # testing
 /coverage
 
+# temp directory
+/temp
+
 # production
 build
 styleguide
