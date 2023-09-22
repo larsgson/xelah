@@ -30,9 +30,14 @@ const handlers = {
   },
 };
 
+function handleContent (str) {
+  console.log(str)
+  setContent(str)
+}
+
 const props = {
   content,
-  onContent: setContent,
+  onContent: (str) => handleContent(str),
   onInput: (ev) => console.log(ev),
   options: {},
   components,
@@ -40,6 +45,8 @@ const props = {
   show,
   onShow
 };
+
+console.log(props);
 
 <EditableSection {...props} />;
 ```

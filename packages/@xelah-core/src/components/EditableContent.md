@@ -44,9 +44,14 @@ const handlers = {
   },
 };
 
+function handleContent (str) {
+  console.log(str)
+  setText(str)
+}
+
 const props = {
   content,
-  onContent: setText,
+  onContent: (str) => handleContent(str),
   onInput: (ev) => console.log(ev),
   options: {
     sectionable,
@@ -67,6 +72,8 @@ const buttons = (
     <button style={(preview ? {borderStyle: 'inset'} : {})} onClick={onPreview}>Preview</button>
   </>
 );
+
+console.log(props);
 
 <div>
   {buttons}

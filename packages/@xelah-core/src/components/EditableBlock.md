@@ -28,14 +28,21 @@ const decorators = {
   // words: [/>(\w+)</g, '<span style="border: 1px solid lightyellow; background: lightyellow">$1</span>'],
 }
 
+function handleContent (str) {
+  console.log(str)
+  setContent(str)
+}
+
 const props = {
   content,
-  onContent: setContent,
+  onContent: (str) => handleContent(str),
   onInput: (ev) => console.log(ev),
   components,
   decorators,
   style,
 };
+
+console.log(props);
 
 <EditableBlock {...props} />;
 ```
