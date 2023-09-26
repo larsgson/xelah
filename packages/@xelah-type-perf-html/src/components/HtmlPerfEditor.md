@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react';
 import {
   SectionHeading,
   Menu,
-} from '@xelah/type-perf-html';
+} from '@xelah/lexical-perf-html';
 
 import __htmlPerf from '../data/tit-fra_fraLSG-perf.html.json';
 

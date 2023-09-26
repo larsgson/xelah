@@ -6,11 +6,11 @@ The primary implementation will be focused on ste-perf-html but architected to b
 
 ## Packages
 
-### @xelah/core 
+### @xelah/lexical 
 
 A core library that others extend to edit their respective file formats.
 
-### @xelah/type-perf-html
+### @xelah/lexical-perf-html
 
 An implementation of STE for editing HtmlPerf, a block based format based on Epitelete/PERF.
 

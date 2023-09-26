@@ -1,20 +1,21 @@
 /* eslint-disable no-unused-vars */
-/* eslint-disable react/display-name */
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 
-import { 
-  $getRoot, 
+import {
+  $getRoot,
   $createParagraphNode,
   $createTextNode,
-  $getSelection 
+  $getSelection,
+  BLUR_COMMAND,
+  FOCUS_COMMAND,
+  COMMAND_PRIORITY_LOW
 } from "lexical"
 
 import {LexicalComposer} from '@lexical/react/LexicalComposer'
 import {PlainTextPlugin} from '@lexical/react/LexicalPlainTextPlugin'
 import {ContentEditable} from '@lexical/react/LexicalContentEditable'
 import {HistoryPlugin} from '@lexical/react/LexicalHistoryPlugin'
-// import {OnChangePlugin} from '@lexical/react/LexicalOnChangePlugin'
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext'
 import LexicalErrorBoundary from '@lexical/react/LexicalErrorBoundary'
 
@@ -41,24 +42,21 @@ export default function EditableBlock({
   verbose = false,
   ...props
 }) {
-  const components = { ...DEFAULT_PROPS.components, ..._components }
-  const { block: Block } = components || {}
+  const components = { ...DEFAULT_PROPS.components, ..._components };
+  const { block: Block } = components || {};
+  const [textCache, setTextCache] = useState(content)
 
   useEffect(() => {
     if (verbose) console.log("EditableBlock First Render");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
 
-  const { 
-    editIndex, 
-    save, 
-    ...editableBlockProps 
-  } = useEditableBlockProps({ 
-    content, 
-    onContent, 
-    decorators, 
-    options 
-  })
+  const { editIndex, save, ...editableBlockProps } = useEditableBlockProps({
+    content,
+    onContent,
+    decorators,
+    options,
+  });
 
   const blockProps = {
     content,
@@ -68,17 +66,25 @@ export default function EditableBlock({
     verbose,
     options,
     ...editableBlockProps,
-    ...props
-  }
+    ...props,
+  };
 
-  const OnChangePlugin = () => {
+  // eslint-disable-next-line react/prop-types
+  const OnChangePlugin = ({ onChange }) => {
     const [editor] = useLexicalComposerContext();
     useEffect(() => {
       return editor.registerUpdateListener((listener) => {
-        console.log("DATA", listener.editorState.toJSON());
-        console.log(listener);
+        let retObj = {};
+        listener.prevEditorState.read(
+          () => (retObj.prevText = $getRoot()?.__cachedText)
+        );
+        listener.editorState.read(
+          () => (retObj.curText = $getRoot()?.__cachedText)
+        );
+        setTextCache(retObj.curText)
+        onChange && onChange(retObj);
       });
-    }, [editor]);
+    }, [editor, onChange]);
 
     return null;
   };
@@ -87,9 +93,7 @@ export default function EditableBlock({
     const root = $getRoot();
     root.clear();
     const p = $createParagraphNode();
-    p.append(
-      $createTextNode(content)
-    );
+    p.append($createTextNode(content));
     root.append(p);
   }
 
@@ -101,25 +105,45 @@ export default function EditableBlock({
     },
   };
 
+  // eslint-disable-next-line react/prop-types
+  const OnEditorBlurPlugin = ({ onBlur }) => {
+    const [editor] = useLexicalComposerContext();
+
+    useEffect(
+      () =>
+        editor.registerCommand(
+          BLUR_COMMAND,
+          () => {
+            onBlur && onBlur(textCache)
+            return false;
+          },
+          COMMAND_PRIORITY_LOW
+        ),
+      [editor, onBlur]
+    );
+
+    return null;
+  };
+
   return (
-    // <Block key={editIndex + content} {...blockProps} />
     <LexicalComposer initialConfig={lexicalConfig}>
       <PlainTextPlugin
-        contentEditable={<ContentEditable
-          style={{
-            position: "relative",
-            borderColor: "rgba(255,211,2,0.68)",
-            border: "2px solid red",
-            borderRadius: "5px",
-            maxWidth: "100%",
-            padding: "10px",
-          }}
-        />}
+        contentEditable={
+          <ContentEditable
+            style={{
+              position: "relative",
+              border: "none",
+              maxWidth: "100%",
+              padding: "1px",
+            }}
+          />
+        }
         placeholder={<div></div>}
         ErrorBoundary={LexicalErrorBoundary}
       />
       <HistoryPlugin />
       <OnChangePlugin onChange={onInput} />
+      <OnEditorBlurPlugin onBlur={onContent} />
     </LexicalComposer>
   );
 }

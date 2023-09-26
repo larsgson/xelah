@@ -1,15 +1,15 @@
 {
-  "name": "@xelah/type-perf-html",
+  "name": "@xelah/lexical-perf-html",
   "description": "A React Component Library for simple text editing.",
-  "version": "1.0.2",
-  "homepage": "https://xelah-type-perf-html.netlify.app/",
+  "version": "1.1.0",
+  "homepage": "https://xelah-lexical-perf-html.netlify.app/",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/xelahjs/xelah.git"
   },
   "dependencies": {
-    "@xelah/core": "^1.0.2",
+    "@xelah/lexical": "^1.0.2",
     "lodash.isequal": "^4.5.0",
     "use-deep-compare": "^1.1.0"
   },
@@ -57,6 +57,8 @@
     "build"
   ],
   "nx": {
-    "implicitDependencies": ["@xelah/core"]
+    "implicitDependencies": [
+      "@xelah/lexical"
+    ]
   }
 }
