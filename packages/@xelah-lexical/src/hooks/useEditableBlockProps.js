@@ -25,6 +25,9 @@ export default function useEditableBlockProps({
 
   const [editIndex, setEditIndex] = useState(0);
 
+  // console.log(_options);
+  // console.log(_decorators);
+
   const __html = useDeepCompareMemo(() => {
     let ___html = content;
     const decorators = !returnHtml ?
@@ -47,7 +50,6 @@ export default function useEditableBlockProps({
     suppressContentEditableWarning: true,
     onInput,
   }), [editable, __html, onInput, editIndex]);
-  console.log(props)
   return props;
 };
 

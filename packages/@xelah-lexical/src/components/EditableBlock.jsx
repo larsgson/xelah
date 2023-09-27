@@ -6,11 +6,11 @@ import {
   $getRoot,
   $createParagraphNode,
   $createTextNode,
-  $getSelection,
   BLUR_COMMAND,
-  FOCUS_COMMAND,
   COMMAND_PRIORITY_LOW
 } from "lexical"
+
+import { $generateNodesFromDOM } from "@lexical/html"
 
 import {LexicalComposer} from '@lexical/react/LexicalComposer'
 import {PlainTextPlugin} from '@lexical/react/LexicalPlainTextPlugin'
@@ -43,8 +43,8 @@ export default function EditableBlock({
   ...props
 }) {
   const components = { ...DEFAULT_PROPS.components, ..._components };
-  const { block: Block } = components || {};
-  const [textCache, setTextCache] = useState(content)
+  const [textCache, setTextCache] = useState(content);
+  const [initialText, setInitialText] = useState();
 
   useEffect(() => {
     if (verbose) console.log("EditableBlock First Render");
@@ -81,7 +81,7 @@ export default function EditableBlock({
         listener.editorState.read(
           () => (retObj.curText = $getRoot()?.__cachedText)
         );
-        setTextCache(retObj.curText)
+        setTextCache(retObj.curText);
         onChange && onChange(retObj);
       });
     }, [editor, onChange]);
@@ -89,20 +89,40 @@ export default function EditableBlock({
     return null;
   };
 
-  function prepopulatedText() {
-    const root = $getRoot();
-    root.clear();
-    const p = $createParagraphNode();
-    p.append($createTextNode(content));
-    root.append(p);
-  }
-
   const lexicalConfig = {
-    editorState: () => prepopulatedText(),
     namespace: "Lexical Editor (replacing Xelah)",
     onError: (e) => {
       console.log("ERROR:", e);
     },
+  };
+
+  // eslint-disable-next-line react/prop-types
+  const LoadInitialContent = () => {
+    const [editor] = useLexicalComposerContext();
+
+    useEffect(() => {
+      if (initialText || !textCache) {
+        return;
+      }
+      editor.update(() => {
+        const htmlMode = options?.returnHtml;
+        const root = $getRoot();
+        root.clear();
+        if (htmlMode) {
+          const parser = new DOMParser();
+          const dom = parser.parseFromString(textCache, "text/html");
+          const nodes = $generateNodesFromDOM(editor, dom);
+          root.append(...nodes);
+        } else {
+          const p = $createParagraphNode();
+          p.append($createTextNode(textCache));
+          root.append(p);
+        }
+        setInitialText(textCache);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+    return null;
   };
 
   // eslint-disable-next-line react/prop-types
@@ -114,7 +134,7 @@ export default function EditableBlock({
         editor.registerCommand(
           BLUR_COMMAND,
           () => {
-            onBlur && onBlur(textCache)
+            onBlur && onBlur(textCache);
             return false;
           },
           COMMAND_PRIORITY_LOW
@@ -142,6 +162,7 @@ export default function EditableBlock({
         ErrorBoundary={LexicalErrorBoundary}
       />
       <HistoryPlugin />
+      <LoadInitialContent initialContent={initialText} />
       <OnChangePlugin onChange={onInput} />
       <OnEditorBlurPlugin onBlur={onContent} />
     </LexicalComposer>
