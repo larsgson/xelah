@@ -25,6 +25,9 @@ export default function useEditableBlockProps({
 
   const [editIndex, setEditIndex] = useState(0);
 
+  // console.log(_options);
+  // console.log(_decorators);
+
   const __html = useDeepCompareMemo(() => {
     let ___html = content;
     const decorators = !returnHtml ?
@@ -40,36 +43,13 @@ export default function useEditableBlockProps({
     return ___html;
   }, [content, returnHtml, _decorators, preview]);
 
-  const save = useDeepCompareCallback((element) => {
-    let _content;
-
-    if (returnHtml) {
-      _content = element.innerHTML.replaceAll('\u200B', '');
-    } else {
-      const div = document.createElement('div');
-      div.innerHTML = element.innerHTML.replaceAll('<div', '\n<div');
-      _content = div.textContent.replaceAll(/&lt;/g, '<');
-    };
-
-    if (content !== _content) {
-      onContent(_content);
-      setEditIndex(editIndex + 1);
-    };
-  }, [returnHtml, content, onContent, editIndex]);
-
-  const onBlur = useCallback((event) => {
-    save(event.target);
-  }, [save]);
-
   const props = useDeepCompareMemo(() => ({
     editIndex,
     contentEditable: editable,
-    dangerouslySetInnerHTML: { __html },
+    // dangerouslySetInnerHTML: { __html },
     suppressContentEditableWarning: true,
-    save,
-    onBlur,
     onInput,
-  }), [editable, __html, onBlur, onInput, editIndex]);
+  }), [editable, __html, onInput, editIndex]);
   return props;
 };
 
