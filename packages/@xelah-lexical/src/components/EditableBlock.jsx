@@ -44,7 +44,7 @@ export default function EditableBlock({
 }) {
   const components = { ...DEFAULT_PROPS.components, ..._components };
   const [textCache, setTextCache] = useState(content);
-  const [initialText, setInitialText] = useState();
+  const [initialTextLoaded, setInitialTextLoaded] = useState(false)
 
   useEffect(() => {
     if (verbose) console.log("EditableBlock First Render");
@@ -97,31 +97,36 @@ export default function EditableBlock({
   };
 
   // eslint-disable-next-line react/prop-types
-  const LoadInitialContent = () => {
+  const LoadInitialContent = ({
+    initialContent,
+    htmlMode,
+    hasLoaded,
+    onLoaded,
+  }) => {
     const [editor] = useLexicalComposerContext();
 
     useEffect(() => {
-      if (initialText || !textCache) {
+      if (hasLoaded || !initialContent) {
         return;
       }
       editor.update(() => {
-        const htmlMode = options?.returnHtml;
         const root = $getRoot();
         root.clear();
         if (htmlMode) {
           const parser = new DOMParser();
-          const dom = parser.parseFromString(textCache, "text/html");
+          const dom = parser.parseFromString(initialContent, "text/html");
+          console.log(dom);
           const nodes = $generateNodesFromDOM(editor, dom);
+          console.log(nodes)
           root.append(...nodes);
         } else {
           const p = $createParagraphNode();
-          p.append($createTextNode(textCache));
+          p.append($createTextNode(initialContent));
           root.append(p);
         }
-        setInitialText(textCache);
+        onLoaded && onLoaded();
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [editor, initialContent, hasLoaded]);
     return null;
   };
 
@@ -145,6 +150,10 @@ export default function EditableBlock({
     return null;
   };
 
+  const handleLoadedContent = () => setInitialTextLoaded(true);
+  const handleOnInput = (props) => initialTextLoaded && onInput(props)
+  const handleOnContent = (props) => initialTextLoaded && onContent(props)
+
   return (
     <LexicalComposer initialConfig={lexicalConfig}>
       <PlainTextPlugin
@@ -162,9 +171,14 @@ export default function EditableBlock({
         ErrorBoundary={LexicalErrorBoundary}
       />
       <HistoryPlugin />
-      <LoadInitialContent initialContent={initialText} />
-      <OnChangePlugin onChange={onInput} />
-      <OnEditorBlurPlugin onBlur={onContent} />
+      <LoadInitialContent
+        initialContent={textCache}
+        hasLoaded={initialTextLoaded}
+        htmlMode={options?.returnHtml}
+        onLoaded={handleLoadedContent}
+      />
+      <OnChangePlugin onChange={handleOnInput} />
+      <OnEditorBlurPlugin onBlur={handleOnContent} />
     </LexicalComposer>
   );
 }
